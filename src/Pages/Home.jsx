@@ -96,7 +96,7 @@ export default function Home() {
                         user.data = null;
                         user.mime_type = null;
                         user.img_URL = null; 
-                        }} className="text-4xl font-mono">SmartAgent</h1>
+                        }} className="text-4xl font-extrabold font-serif"><span className="text-6xl">S</span>martAgent AI <span className="text-sm">(by Akshay Teotia)</span></h1>
             </div>
 
             <input type="file" accept="image/*" hidden ref={Img} onChange={Imagehandler} />
