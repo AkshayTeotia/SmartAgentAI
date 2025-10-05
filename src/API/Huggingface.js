@@ -10,16 +10,17 @@ export async function query() {
       {
         instances: [
           {
-            prompt: prevUser.prompt, // text prompt for the image
+            prompt: prevUser.prompt, // plain text prompt
           },
         ],
         parameters: {
-          sampleCount: 1, // number of images to generate
+          sampleCount: 1, // generate 1 image
+          temperature: 1,  // optional
         },
       },
       {
         headers: {
-          "x-goog-api-key": import.meta.env.VITE_KEY1, // your Gemini API key
+          "x-goog-api-key": import.meta.env.VITE_KEY1,
           "Content-Type": "application/json",
         },
       }
@@ -27,14 +28,13 @@ export async function query() {
 
     console.log("Gemini Image API response:", response.data);
 
-    // Extract the first generated image (base64)
-    const base64Image = response.data.predictions?.[0]?.image?.content;
+    // Gemini returns base64 image here
+    const base64Image = response.data.predictions?.[0]?.content?.[0]?.image;
 
     if (!base64Image) return null;
 
     // Convert to data URL for <img>
-    const imageUrl = `data:image/png;base64,${base64Image}`;
-    return imageUrl;
+    return `data:image/png;base64,${base64Image}`;
   } catch (error) {
     console.error("Error generating Gemini image:", error.response?.data || error.message);
     return null;
