@@ -1,22 +1,8 @@
-const LIST_MODELS_URL = "https://generativelanguage.googleapis.com/v1beta/models";
+import { prevUser } from "../Context/UserContext";
 
-async function listModels() {
-  const resp = await fetch(LIST_MODELS_URL, {
-    headers: {
-      "x-goog-api-key": import.meta.env.VITE_KEY1,
-    },
-  });
-  const data = await resp.json();
-  console.log("Available models:", data);
-  return data;
-}
+const URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${import.meta.env.VITE_KEY1}`;
 
 async function Gemini() {
-  // Suppose after listing you saw "gemini-2.0-flash" is valid
-  const modelName = "gemini-2.0-flash"; // <— adjust after you check
-
-  const URL = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
-
   const payload = {
     contents: [
       {
@@ -25,8 +11,8 @@ async function Gemini() {
           ...(prevUser.data
             ? [
                 {
-                  inlineData: {
-                    mimeType: prevUser.mime_type,
+                  inline_data: {
+                    mime_type: prevUser.mime_type,
                     data: prevUser.data,
                   },
                 },
@@ -37,18 +23,30 @@ async function Gemini() {
     ],
   };
 
-  const response = await fetch(URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-goog-api-key": import.meta.env.VITE_KEY1,
-    },
-    body: JSON.stringify(payload),
-  });
-  const data = await response.json();
-  console.log("Gemini response:", data);
-  if (!response.ok) {
-    throw new Error(data.error?.message || "Unknown API error");
+  try {
+    const response = await fetch(URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+    console.log("Gemini API Response:", data);
+
+    if (!response.ok) {
+      throw new Error(data.error?.message || "Unknown API Error");
+    }
+
+    const apiResponse =
+      data?.candidates?.[0]?.content?.parts?.[0]?.text
+        ?.replace(/\*\*(.*?)\*\*/g, "$1")
+        ?.trim() || "No response text found.";
+
+    return apiResponse;
+  } catch (e) {
+    console.error("Gemini API Error:", e);
+    return "Something went wrong with Gemini API request.";
   }
-  return data.candidates[0].content.parts[0].text.trim();
 }
+
+export default Gemini;
