@@ -1,52 +1,56 @@
-
 import { prevUser } from "../Context/UserContext";
 
+const URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 
- const URL=`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${import.meta.env.VITE_KEY1}`
+async function Gemini() {
+  try {
+    // prepare payload properly
+    const payload = {
+      contents: [
+        {
+          parts: [
+            { text: prevUser.prompt },
+            ...(prevUser.data
+              ? [
+                  {
+                    inlineData: {
+                      mimeType: prevUser.mime_type,
+                      data: prevUser.data,
+                    },
+                  },
+                ]
+              : []),
+          ],
+        },
+      ],
+    };
 
+    // make POST request
+    const response = await fetch(URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": import.meta.env.VITE_KEY1, // API key from .env
+      },
+      body: JSON.stringify(payload),
+    });
 
+    const data = await response.json();
 
-
-async function Gemini(){
-
-    let requestData={
-        method:'POST',
-        headers:{'Content-Type': 'application/json'},
-        body:JSON.stringify({
-            "contents": [{
-    "parts":[
-      {"text": prevUser.prompt},
-      prevUser.data?[{
-        "inline_data": {
-          "mime_type":prevUser.mime_type,
-          "data": prevUser.data
-        }
-      }]:[]
-      
-    ]
-  }]
-        })
+    // Handle API errors
+    if (!response.ok) {
+      console.error("Gemini API Error:", data);
+      return "Error: " + (data.error?.message || "Something went wrong");
     }
-        try{
-            let response=await fetch(URL,requestData);
-            let data= await response.json();
-            let apiResponse=data.candidates[0].content.parts[0].text.replace(/\*\*(.*?)\*\*/g,"$1").trim();  
-            
-            console.log(data);
-            return apiResponse;
-    
-        }
-        catch(e){
-            console.log(e);   
-         }
 
-    }
-    
-    
-    
+    // Extract AI text safely
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    return text ? text.replace(/\*\*(.*?)\*\*/g, "$1").trim() : "No response received.";
 
+  } catch (error) {
+    console.error("Gemini() Fetch Error:", error);
+    return "Failed to reach Gemini API.";
+  }
+}
 
-
-  
-
-export default Gemini
+export default Gemini;
